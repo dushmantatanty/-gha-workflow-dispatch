@@ -1,0 +1,23 @@
+name: Trigger Workflow
+description: "Trigger a workflow_dispatch event with specific inputs"
+title: "[Trigger Workflow] Enter your details"
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this template to manually trigger a workflow with inputs.
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: "Specify the environment (e.g., production, staging)"
+      placeholder: "production"
+      
+
+  - type: input
+    id: version
+    attributes:
+      label: Deployment Version
+      description: "Specify the version to deploy (optional)"
+      placeholder: "v1.0.0"

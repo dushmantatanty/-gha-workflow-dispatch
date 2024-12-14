@@ -1,0 +1,30 @@
+name: Trigger Workflow from Issue
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Environment to deploy (e.g., production, staging)"
+        required: true
+        type: string
+      version:
+        description: "Version to deploy (optional)"
+        required: false
+        type: string
+
+jobs:
+  process_inputs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Show inputs from issue
+        run: |
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Version: ${{ github.event.inputs.version }}"
+
+      - name: Deploy application
+        run: |
+          ./deploy.sh ${{ github.event.inputs.environment }} ${{ github.event.inputs.version }}
