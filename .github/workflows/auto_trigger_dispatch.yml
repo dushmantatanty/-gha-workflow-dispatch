@@ -1,0 +1,57 @@
+name: Auto Trigger Workflow Dispatch
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+  process_issue:
+    runs-on: ubuntu-latest
+    if: startsWith(github.event.issue.title, '[Trigger Workflow]')
+
+    steps:
+      - name: Extract inputs from issue body
+        id: extract
+        run: |
+          echo "Parsing issue body..."
+          environment=$(echo "${{ github.event.issue.body }}" | grep 'Environment:' | awk '{print $2}')
+          version=$(echo "${{ github.event.issue.body }}" | grep 'Version:' | awk '{print $2}')
+          echo "environment=${environment}" >> $GITHUB_ENV
+          echo "version=${version}" >> $GITHUB_ENV
+
+      - name: Trigger workflow_dispatch
+        env:
+          PAT: ${{ secrets.GH_PAT }}
+        run: |
+          echo "Triggering workflow_dispatch..."
+          curl -X POST \
+            -H "Accept: application/vnd.github.v3+json" \
+            -H "Authorization: token $PAT" \
+            https://api.github.com/repos/${{ github.repository }}/actions/workflows/trigger_workflow.yml/dispatches \
+            -d '{
+              "ref": "main",
+              "inputs": {
+                "environment": "'"$environment"'",
+                "version": "'"$version"'"
+              }
+            }'
+
+      - name: Comment on issue
+        env:
+          PAT: ${{ secrets.GH_PAT }}
+        run: |
+          curl -X POST \
+            -H "Authorization: token $PAT" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/${{ github.repository }}/issues/${{ github.event.issue.number }}/comments \
+            -d '{
+              "body": "Workflow has been triggered with the provided inputs."
+            }'
+
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Echo Inputs
+        run: |
+          echo "Environment: ${{ github.event.inputs.environment }}"
+          echo "Version: ${{ github.event.inputs.version }}"
